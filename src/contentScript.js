@@ -1,15 +1,16 @@
 import { getTTFB, getLCP, getFID, getFCP, getCLS } from "web-vitals";
 import { InfluxDB, Point } from "@influxdata/influxdb-client-browser";
 
-const token =
-  "FA8znkxlXzN1S81jKIOQLhqGx7nnpxgXjp-oSO9hEcfNkljPNPneNs2Ir15h_7g5pCsX0H_txtYB-Ab44-MUMw==";
-const org = "jack@muttmansion.com";
-const bucket = "PerformanceData";
+const token = null; // Your token;
+const org = null; // Your org
+const bucket = null; // Your bucket
 
-const client = new InfluxDB({
-  url: "https://us-west-2-1.aws.cloud2.influxdata.com",
-  token: token,
-});
+const client = token
+  ? new InfluxDB({
+      url: "https://us-west-2-1.aws.cloud2.influxdata.com",
+      token: token,
+    })
+  : null;
 
 const infoDiv = document.createElement("div");
 infoDiv.style.position = "fixed";
@@ -25,12 +26,15 @@ document.body.appendChild(infoDiv);
 const metrics = {};
 const gatherMetrics = ({ name, value }) => {
   metrics[name] = value;
-  const writeApi = client.getWriteApi(org, bucket);
-  writeApi.useDefaultTags({ host: "host1" });
 
-  const point = new Point("perf").floatField(name, value);
-  writeApi.writePoint(point);
-  writeApi.close();
+  if (client) {
+    const writeApi = client.getWriteApi(org, bucket);
+    writeApi.useDefaultTags({ host: "host1" });
+
+    const point = new Point("perf").floatField(name, value);
+    writeApi.writePoint(point);
+    writeApi.close();
+  }
 
   chrome.runtime.sendMessage({
     type: "performance:metric",
